@@ -241,13 +241,16 @@ function usesUniSkill(skills) {
   return skills.some(isSummarySkill);
 }
 
-// The fixed conversion rules, shipped with nexa2vue as skills:
-// - nexa2vue-rules: how a Nexacro screen is carried over, in any Vue project
-// - nexa2vue-rules-uni: how those rules are kept with the uni components (uni only)
-// Every conversion gets them, with or without a summary skill. Skills win in
-// prompt order: ones the user added, then these rules, then the summary skill.
+// The fixed conversion rules, shipped with nexa2vue as a skill:
+// nexa2vue-rules = how a Nexacro screen is carried over, in any Vue project.
+// Every conversion gets it, with or without a summary skill. How those rules
+// are kept with a project's own components is not shipped: the summary skill
+// (uni-skill.js, made at 구조 파악 from that project's code) writes it.
+// Skills win in prompt order: ones the user added, then these rules, then the
+// summary skill.
 const RULES_SKILL_DIR = path.join(__dirname, '..', 'skills', 'nexa2vue-rules');
-const UNI_RULES_SKILL_DIR = path.join(__dirname, '..', 'skills', 'nexa2vue-rules-uni');
+// nexa2vue-rules-uni was shipped until 2026-11; a copy left in a skill folder is
+// still dropped like the rules skill (the summary skill replaces it).
 const RULES_SKILL_NAMES = ['nexa2vue-rules', 'nexa2vue-rules-uni'];
 const isRulesSkill = (s) => RULES_SKILL_NAMES.includes(s.name);
 // Summary skills made before the rules had their own skill carry an old copy of
@@ -267,12 +270,13 @@ function withoutLegacyRules(body) {
  * (picked order), then the fixed rules (the uni ones only for uni), then the
  * summary skill 구조 파악 made.
  */
-function conversionSkills(skillPaths, { uni }) {
+// uni / vue get the same rules skill; the project-specific way of keeping it
+// comes from the summary skill. (opts kept for callers: { uni })
+function conversionSkills(skillPaths, opts = {}) { // eslint-disable-line no-unused-vars
   const picked = loadSkills(skillPaths).filter((s) => !isRulesSkill(s));
   const added = picked.filter((s) => !isSummarySkill(s));
   const summary = picked.filter(isSummarySkill).map((s) => ({ ...s, body: withoutLegacyRules(s.body) }));
-  const rules = [loadSkill(RULES_SKILL_DIR), ...(uni ? [loadSkill(UNI_RULES_SKILL_DIR)] : [])];
-  return [...added, ...rules, ...summary];
+  return [...added, loadSkill(RULES_SKILL_DIR), ...summary];
 }
 
 const uniSkills = (skillPaths) => conversionSkills(skillPaths, { uni: true });
@@ -1151,4 +1155,4 @@ function loginState() {
   return { running: !!loginChild, url: loginUrl };
 }
 
-module.exports = { API_SPEC_SCHEMA, DEFAULT_TIMEOUT_MIN, runClaude, removeWorkDir, usageState, usageLine, probeUsage, aiConvertScreen, aiConvertScreenVue, aiFixScreen, buildFixPrompt, buildPromptVue, cleanOutputPath, OUTPUT_SCHEMA_VUE, checkClaude, claudeStatus, selectClaudeAccount, startClaudeLogin, logoutClaude, loginState, buildPrompt, loadSkill, loadSkills, uniSkills, conversionSkills, withoutLegacyRules, RULES_SKILL_DIR, UNI_RULES_SKILL_DIR, listSkills, claudeCommand, UNI_SKILL_NAME, isSummarySkill, OUTPUT_SCHEMA, OUTPUT_SCHEMA_BACKEND };
+module.exports = { API_SPEC_SCHEMA, DEFAULT_TIMEOUT_MIN, runClaude, removeWorkDir, usageState, usageLine, probeUsage, aiConvertScreen, aiConvertScreenVue, aiFixScreen, buildFixPrompt, buildPromptVue, cleanOutputPath, OUTPUT_SCHEMA_VUE, checkClaude, claudeStatus, selectClaudeAccount, startClaudeLogin, logoutClaude, loginState, buildPrompt, loadSkill, loadSkills, uniSkills, conversionSkills, withoutLegacyRules, RULES_SKILL_DIR, listSkills, claudeCommand, UNI_SKILL_NAME, isSummarySkill, OUTPUT_SCHEMA, OUTPUT_SCHEMA_BACKEND };

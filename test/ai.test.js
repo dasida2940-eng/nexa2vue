@@ -5,7 +5,7 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
 const { convertSources } = require('../src/convert-core');
-const { buildPrompt, loadSkill, loadSkills, uniSkills, conversionSkills, withoutLegacyRules, RULES_SKILL_DIR, UNI_RULES_SKILL_DIR, listSkills, runClaude, removeWorkDir, UNI_SKILL_NAME, OUTPUT_SCHEMA } = require('../src/ai-convert');
+const { buildPrompt, loadSkill, loadSkills, uniSkills, conversionSkills, withoutLegacyRules, RULES_SKILL_DIR, listSkills, runClaude, removeWorkDir, UNI_SKILL_NAME, OUTPUT_SCHEMA } = require('../src/ai-convert');
 
 const UNI = path.join(__dirname, 'fixtures', 'uni');
 const sources = ['ua/usr/BAU0101010.xfdl', 'ua/usr/BAU0102010.xfdl'].map((rel) => ({
@@ -337,18 +337,16 @@ test('with the vue-convert summary skill the inputs go into the prompt and no un
   assert.doesNotMatch(plain, /<file path=/);
 });
 
-test('every uni conversion gets the nexa2vue rules skills, with or without a summary skill', () => {
+test('every conversion gets the nexa2vue rules skill, with or without a summary skill', () => {
   const rules = loadSkill(RULES_SKILL_DIR);
   assert.equal(rules.name, 'nexa2vue-rules');
   assert.match(rules.body, /원본 Div 하나는 영역 하나로 둔다/);
-  // the common rules name no uni component; those live in the uni rules skill
+  // the rules name no project component: how a project keeps them comes from its summary skill
   assert.doesNotMatch(rules.body, /SearchSection|ButtonGroup|Field|selector-box|CCU0|q-btn|Constant/);
-  const uniRules = loadSkill(UNI_RULES_SKILL_DIR);
-  assert.equal(uniRules.name, 'nexa2vue-rules-uni');
-  assert.match(uniRules.body, /Field는 v-model·type·maxlength props가 없다/);
-  // no skill picked: still the rules, and the prompt carries them
-  assert.deepEqual(uniSkills([]).map((s) => s.name), ['nexa2vue-rules', 'nexa2vue-rules-uni']);
-  // another Vue project: the common rules only
+  // no uni rules skill is shipped any more
+  assert.ok(!fs.existsSync(path.join(path.dirname(RULES_SKILL_DIR), 'nexa2vue-rules-uni')));
+  // no skill picked: still the rules, and the prompt carries them; uni and other projects alike
+  assert.deepEqual(uniSkills([]).map((s) => s.name), ['nexa2vue-rules']);
   assert.deepEqual(conversionSkills([], { uni: false }).map((s) => s.name), ['nexa2vue-rules']);
   const names = { view: 'AView.vue', service: 'AService.js', constant: 'AConstant.js' };
   const plain = buildPrompt({ relPath: 'a', draftNames: names, uniFrontend: 'C:\\uni', skills: uniSkills([]) });
@@ -363,8 +361,12 @@ test('every uni conversion gets the nexa2vue rules skills, with or without a sum
     const summaryDir = path.join(root, UNI_SKILL_NAME);
     fs.mkdirSync(summaryDir, { recursive: true });
     fs.writeFileSync(path.join(summaryDir, 'SKILL.md'), `---\nname: ${UNI_SKILL_NAME}\n---\n요약\n`);
-    const skills = uniSkills([summaryDir, path.join(root, 'screen-convert'), RULES_SKILL_DIR, UNI_RULES_SKILL_DIR]);
-    assert.deepEqual(skills.map((s) => s.name), ['screen-convert', 'nexa2vue-rules', 'nexa2vue-rules-uni', UNI_SKILL_NAME]);
+    // an old copy of nexa2vue-rules-uni left in a skill folder is dropped like the rules skill
+    const oldUni = path.join(root, 'nexa2vue-rules-uni');
+    fs.mkdirSync(oldUni, { recursive: true });
+    fs.writeFileSync(path.join(oldUni, 'SKILL.md'), '---\nname: nexa2vue-rules-uni\n---\n옛 uni 규칙\n');
+    const skills = uniSkills([summaryDir, path.join(root, 'screen-convert'), RULES_SKILL_DIR, oldUni]);
+    assert.deepEqual(skills.map((s) => s.name), ['screen-convert', 'nexa2vue-rules', UNI_SKILL_NAME]);
     assert.match(buildPrompt({ relPath: 'a', draftNames: names, uniFrontend: 'C:\\uni', skills }), /스킬끼리 다르면 앞에 있는 스킬을 따른다/);
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
@@ -380,12 +382,12 @@ test('a summary skill made before the rules skill loses its old copy of the rule
   const dir = fs.mkdtempSync(path.join(require('os').tmpdir(), 'nexa2vue-summary-'));
   try {
     fs.writeFileSync(path.join(dir, 'SKILL.md'), `---\nname: ${UNI_SKILL_NAME}\ndescription: 요약\n---\n\n${old}\n`);
-    const [first, uniRules, summary] = uniSkills([dir]);
+    const [first, summary] = uniSkills([dir]);
     assert.equal(first.name, 'nexa2vue-rules');
-    assert.equal(uniRules.name, 'nexa2vue-rules-uni');
+    assert.equal(summary.name, UNI_SKILL_NAME);
     assert.doesNotMatch(summary.body, /옛 규칙/);
-    // with the summary skill the run stays one-shot: the rules skills add no folder to read
-    const prompt = buildPrompt({ relPath: 'a', draftNames: { view: 'V', service: 'S', constant: 'C' }, uniFrontend: 'C:\\uni', skills: [first, uniRules, summary], inputs: { 'source.xfdl': '<Form/>' } });
+    // with the summary skill the run stays one-shot: the rules skill adds no folder to read
+    const prompt = buildPrompt({ relPath: 'a', draftNames: { view: 'V', service: 'S', constant: 'C' }, uniFrontend: 'C:\\uni', skills: [first, summary], inputs: { 'source.xfdl': '<Form/>' } });
     assert.match(prompt, /## uni 규칙\n- 위 vue-convert 스킬이/);
     assert.doesNotMatch(prompt, /참고 파일도 읽어도 된다/);
     assert.ok(prompt.indexOf('<skill name="nexa2vue-rules">') < prompt.indexOf(`<skill name="${UNI_SKILL_NAME}">`));

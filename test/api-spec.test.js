@@ -142,8 +142,16 @@ test('summary skill: made skills carry the generator version, older ones read as
   const { skillFile, skillGeneratorVersion, SKILL_GENERATOR_VERSION } = require('../src/uni-skill');
   const made = skillFile({ body: '## 1. 프로젝트 구성', structure: { frontend: { root: 'C:/fe' } }, utils: '' });
   assert.equal(skillGeneratorVersion(made), SKILL_GENERATOR_VERSION);
-  assert.ok(SKILL_GENERATOR_VERSION >= 2);
+  assert.ok(SKILL_GENERATOR_VERSION >= 3);
   assert.equal(skillGeneratorVersion('---\nname: vue-convert\ngenerated-at: x\n---\n'), 1);
+  // 3: the summary skill writes how this project keeps each base rule (no uni rules skill shipped)
+  const { buildSkillPrompt } = require('../src/uni-skill');
+  const prompt = buildSkillPrompt({ frontend: { root: 'C:/fe', screens: ['src/views/a/AView.vue'] } });
+  assert.match(prompt, /6\. 변환 규칙 적용법/);
+  assert.match(prompt, /## nexa2vue 기본 규칙/);
+  assert.match(prompt, /원본 Div 하나는 영역 하나로 둔다/);
+  assert.match(prompt, /7\. 하지 말 것/);
+  assert.match(buildSkillPrompt({ frontend: { root: 'C:/fe', screens: [] }, backend: { root: 'C:/be', referenceScreens: [], basePackage: 'p' } }), /7\. 백엔드[\s\S]*8\. 하지 말 것/);
 });
 
 test('api spec: both AI schemas require apis', () => {

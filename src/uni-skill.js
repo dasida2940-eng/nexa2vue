@@ -11,7 +11,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const acorn = require('acorn');
-const { runClaude, removeWorkDir, UNI_SKILL_NAME } = require('./ai-convert');
+const { runClaude, removeWorkDir, UNI_SKILL_NAME, RULES_SKILL_DIR, loadSkill } = require('./ai-convert');
 const { listScreens } = require('./uni-structure');
 
 // ai-convert.js runs a screen in one turn when it sees this name.
@@ -20,7 +20,9 @@ const SKILL_NAME = UNI_SKILL_NAME;
 // older nexa2vue shows "다시 만들기 권장" (server.js savedSkill). Skills made
 // before this field existed count as 1.
 // 2: API address / params vs body / response shape; nexa2vue-rules topics left out.
-const SKILL_GENERATOR_VERSION = 2;
+// 3: "변환 규칙 적용법" — how each nexa2vue-rules rule is kept with this project's
+//    components, and component pitfalls (replaces the shipped nexa2vue-rules-uni).
+const SKILL_GENERATOR_VERSION = 3;
 const DEFAULT_DIR = path.join(os.homedir(), '.nexa2vue', 'skills', SKILL_NAME);
 const DEFAULT_TIMEOUT_MS = 20 * 60 * 1000;
 
@@ -83,6 +85,16 @@ function utilsReference(frontendRoot) {
   }).filter(Boolean).join('\n\n');
 }
 
+// The shipped base rules (skills/nexa2vue-rules) as the generator's checklist
+// for "6. 변환 규칙 적용법": their bullets, without the skill's heading.
+function rulesText() {
+  try {
+    return loadSkill(RULES_SKILL_DIR).body.replace(/^##[^\n]*\n/m, '').trim();
+  } catch {
+    return '- (기본 규칙 스킬을 읽지 못함 — 6번은 화면 배치·조회조건·버튼·그리드 칸·탭 기준으로 쓴다)';
+  }
+}
+
 function buildSkillPrompt({ frontend, backend }) {
   // Made from the screens of the frontend given at 구조 파악, not from the uni docs.
   const screens = frontend.screens || listScreens(frontend.root);
@@ -108,12 +120,21 @@ ${backend ? `backend (코드만, 문서는 읽지 않음):
    서버 호출은 변환 문서의 API 명세(주소·보내는 값·받는 값)를 쓸 수 있게 따로 정리한다: 실제 요청 주소가 만들어지는 방식(axios baseURL·프록시 + 화면 기본 URL + 함수 경로), 메서드별로 값을 넘기는 방식(쿼리 파라미터/요청 본문, 목록 저장이면 행 배열과 행 상태값), 받는 응답의 모양(감싸는 객체가 있으면 그 구조, 화면이 결과를 꺼내 쓰는 방법).
 4. 이름 규칙: 화면·컴포넌트·api 함수·변수 이름을 화면들에서 보이는 대로.
 5. 대표 예시 하나: 목록+조회+입력/저장이 가장 잘 드러난 화면 하나를 골라 핵심만 남겨 싣는다(주석·중복 제거).
-${backend ? '6. 백엔드: 기준 화면 코드에서 본 Controller/Service/Mapper/Dto/Mapper.xml 이름·패키지·URL 규칙, 뼈대 한 벌(핵심만).\n7' : '6'}. 하지 말 것: 화면들에서 쓰지 않는 방식(다른 UI 라이브러리, 프로젝트에 없는 공통 함수 등).
+6. 변환 규칙 적용법: 아래 "nexa2vue 기본 규칙"의 항목마다, 이 프로젝트에서 그 규칙을 지키는 구체적인 방법을 쓴다(어느 컴포넌트·슬롯·prop·파일로 하는지, 짧은 코드 조각 하나). 규칙 문장 자체는 되풀이하지 않는다. 화면 코드에서 방법을 찾지 못한 항목은 "프로젝트 화면에 예가 없음"이라고 쓰고 notes에도 적는다. 최소한 다음을 다룬다.
+   - 따로 떨어진 조회조건 영역을 하나 더 두는 법(한 화면에 여러 개 둘 때 값·조회 함수를 나누는 법), 한 영역 안에 입력칸 여러 개와 버튼을 원본 순서대로 함께 넣는 법(사용자 정의 칸·슬롯), 조회조건 없이 입력·처리만 하는 영역.
+   - 원본 버튼을 옮기는 곳: 조회 버튼과 그리드의 추가·삭제·저장·엑셀 버튼이 프로젝트의 어떤 기능(이벤트)이 되는지, 그 밖의 버튼을 두는 자리.
+   - 그리드 칸 안에 버튼을 넣는 법(칸 슬롯 이름 규칙, 그 안에 쓰는 버튼 요소, 그 행을 받는 법).
+   - 탭 컴포넌트: props·이벤트·슬롯 유무, 탭 목록 모양, 탭 페이지를 파일로 나누는 방식과 상태를 어디에 두는지(화면 쪽 / 탭 페이지 쪽).
+   - 컴포넌트를 잘못 쓰기 쉬운 곳: 필수 prop, 있을 것 같지만 없는 prop(v-model·type·maxlength 등), 어떤 감싸는 컴포넌트 안에서만 먹는 설정(예: 항목 정의의 disabled가 폼 안에서만 적용되고 단독으로 쓸 때는 prop으로 줘야 하는 경우), 그리드 머리글 줄바꿈·폭 같은 그리기 한계와 그때 맞추는 법.
+${backend ? '7. 백엔드: 기준 화면 코드에서 본 Controller/Service/Mapper/Dto/Mapper.xml 이름·패키지·URL 규칙, 뼈대 한 벌(핵심만).\n8' : '7'}. 하지 말 것: 화면들에서 쓰지 않는 방식(다른 UI 라이브러리, 프로젝트에 없는 공통 함수 등).
+
+## nexa2vue 기본 규칙 (6번의 기준, 변환 때 nexa2vue가 따로 넣는다)
+${rulesText()}
 
 ## 규칙
 - 읽은 화면 코드에 있는 내용만 쓴다. 화면마다 방식이 다르면 가장 많이 쓰는 방식을 쓰고 notes에 적는다. 추측한 규칙은 넣지 말고 notes에 적는다.
 - 넥사크로 쪽 설명(gfn_*, Dataset 등)은 넣지 않는다. 변환 방법은 nexa2vue 프롬프트가 따로 준다.
-- 넥사크로 화면을 옮기는 방법(원본 영역을 나누거나 합치는 기준, 원본에 없는 버튼·제목, 그리드 칸 팝업 위치, 탭 옮기기 등)은 nexa2vue 기본 규칙 스킬(nexa2vue-rules)이 정하므로 넣지 않는다. 이 스킬에는 이 프로젝트의 컴포넌트·코드 방식만 담는다.
+- 넥사크로 화면을 옮기는 원칙(원본 영역을 나누거나 합치는 기준, 원본에 없는 버튼·제목 금지, 그리드 칸 팝업은 그 칸에, 탭은 탭으로)은 nexa2vue 기본 규칙이 정한다. 그 문장을 이 스킬에 되풀이하지 말고, 6번에 이 프로젝트에서 지키는 방법만 쓴다.
 - 파일 경로는 프로젝트 기준 상대 경로로 쓴다(이 PC의 절대 경로 금지).
 - 파일을 만들거나 고치지 말고 skill에 SKILL.md 본문(머리말 제외)을 담는다.`;
 }

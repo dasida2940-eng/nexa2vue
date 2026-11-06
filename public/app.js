@@ -261,7 +261,7 @@ function renderSkill(s, error) {
     skillLogShown = s.logTotal;
   }
   const saved = s.saved
-    ? `${s.saved.file} (${Math.round(s.saved.chars / 1000)}천 자${s.saved.generatedAt ? ` · ${new Date(s.saved.generatedAt).toLocaleString()}` : ''})${s.saved.stale ? ' — 지금의 frontend·backend와 다른 폴더로 만든 스킬이라 쓰지 않습니다. 다시 만들기를 누르세요' : s.saved.outdated ? ' — 이전 버전 nexa2vue로 만든 스킬입니다(API 주소·보내는 값·받는 값 정리 등이 빠져 있음). 지금도 쓰지만 다시 만들기를 권장합니다' : ''}`
+    ? `${s.saved.file} (${Math.round(s.saved.chars / 1000)}천 자${s.saved.generatedAt ? ` · ${new Date(s.saved.generatedAt).toLocaleString()}` : ''})${s.saved.stale ? ' — 지금의 frontend·backend와 다른 폴더로 만든 스킬이라 쓰지 않습니다. 다시 만들기를 누르세요' : s.saved.outdated ? ' — 이전 버전 nexa2vue로 만든 스킬입니다(변환 규칙 적용법, API 주소·보내는 값·받는 값 정리 등이 빠져 있음). 지금도 쓰지만 다시 만들기를 권장합니다' : ''}`
     : '';
   if (running) $('skill-status').textContent = 'Claude가 만드는 중…';
   else if (error || s.state === 'failed') $('skill-status').textContent = `만들지 못했습니다: ${error || s.error}${saved ? ` · 이전 스킬 사용: ${saved}` : ''}`;
