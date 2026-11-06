@@ -1,0 +1,28 @@
+{
+  "name": "nexa2vue",
+  "version": "0.1.0",
+  "description": "Local web tool that converts Nexacro (.xfdl/.xjs) sources to Vue 3 + Element Plus without sending source anywhere",
+  "private": true,
+  "license": "UNLICENSED",
+  "bin": {
+    "nexa2vue": "bin/nexa2vue.js",
+    "nexa2vue-web": "bin/nexa2vue-web.js"
+  },
+  "scripts": {
+    "start": "node bin/nexa2vue-web.js",
+    "test": "node --test",
+    "build:html": "node scripts/build-html.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "acorn": "^8.19.0",
+    "astring": "^1.9.0",
+    "fast-xml-parser": "^5.11.2"
+  },
+  "devDependencies": {
+    "@vue/compiler-sfc": "^3.5.44",
+    "esbuild": "^0.24.2"
+  }
+}

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 가상 샘플: 조회조건(Div 없음) + 그리드 + 같은 Dataset에 바인딩된 상세 폼 -->
+<FDL version="2.1">
+  <Form id="BAU0102010" width="1280" height="720" titletext="장학금 관리">
+    <Layouts>
+      <Layout height="720" width="1280">
+        <Static id="sta_nm" text="장학금명" left="10" top="10" width="70" height="25"/>
+        <Edit id="edt_nm" left="85" top="10" width="200" height="25"/>
+        <Button id="btn_search" text="조회" right="10" top="10" width="80" height="25" onclick="fn_search"/>
+        <Button id="btn_save" text="저장" right="10" top="45" width="80" height="25" onclick="fn_save"/>
+        <Grid id="grd_list" left="10" top="75" right="10" height="350" binddataset="ds_schl100">
+          <Formats>
+            <Format id="default">
+              <Columns><Column size="100"/><Column size="250"/><Column size="120"/></Columns>
+              <Rows><Row size="24" band="head"/><Row size="24"/></Rows>
+              <Band id="head"><Cell text="장학코드"/><Cell col="1" text="장학금명"/><Cell col="2" text="금액"/></Band>
+              <Band id="body"><Cell text="bind:SCHL_CD"/><Cell col="1" text="bind:SCHL_NM"/><Cell col="2" text="bind:AMT"/></Band>
+            </Format>
+          </Formats>
+        </Grid>
+        <Div id="div_detail" left="10" top="435" right="10" bottom="10">
+          <Layouts>
+            <Layout>
+              <Static id="sta_title" text="상세정보" left="0" top="0" width="200" height="25"/>
+              <Static id="sta_cd" text="장학코드" left="0" top="35" width="80" height="25"/>
+              <Edit id="edt_cd" left="85" top="35" width="150" height="25"/>
+              <Static id="sta_nm2" text="* 장학금명" left="260" top="35" width="80" height="25"/>
+              <Edit id="edt_nm2" left="345" top="35" width="300" height="25"/>
+              <Static id="sta_amt" text="금액" left="0" top="70" width="80" height="25"/>
+              <MaskEdit id="msk_amt" type="number" left="85" top="70" width="150" height="25"/>
+              <Static id="sta_rmk" text="비고" left="0" top="105" width="80" height="25"/>
+              <TextArea id="txa_rmk" left="85" top="105" width="560" height="80"/>
+            </Layout>
+          </Layouts>
+        </Div>
+      </Layout>
+    </Layouts>
+    <Objects>
+      <Dataset id="ds_search"><ColumnInfo><Column id="SCHL_NM" type="STRING" size="100"/></ColumnInfo></Dataset>
+      <Dataset id="ds_schl100">
+        <ColumnInfo><Column id="SCHL_CD" type="STRING" size="10"/><Column id="SCHL_NM" type="STRING" size="100"/><Column id="AMT" type="BIGDECIMAL" size="15"/><Column id="RMK" type="STRING" size="4000"/></ColumnInfo>
+      </Dataset>
+    </Objects>
+    <Bind>
+      <BindItem id="b0" compid="edt_nm" propid="value" datasetid="ds_search" columnid="SCHL_NM"/>
+      <BindItem id="b1" compid="div_detail.form.edt_cd" propid="value" datasetid="ds_schl100" columnid="SCHL_CD"/>
+      <BindItem id="b2" compid="div_detail.form.edt_nm2" propid="value" datasetid="ds_schl100" columnid="SCHL_NM"/>
+      <BindItem id="b3" compid="div_detail.form.msk_amt" propid="value" datasetid="ds_schl100" columnid="AMT"/>
+      <BindItem id="b4" compid="div_detail.form.txa_rmk" propid="value" datasetid="ds_schl100" columnid="RMK"/>
+    </Bind>
+  </Form>
+</FDL>

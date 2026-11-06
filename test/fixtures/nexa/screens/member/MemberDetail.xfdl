@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FDL version="2.1">
+  <Form id="MemberDetail" width="800" height="600" titletext="회원 상세">
+    <Layouts>
+      <Layout>
+        <Tab id="tab_main" taborder="0" left="10" top="10" width="780" height="580" tabindex="0">
+          <Tabpages>
+            <Tabpage id="tpg_basic" text="기본정보">
+              <Layouts>
+                <Layout>
+                  <Calendar id="cal_join" taborder="0" left="10" top="10" width="150" height="28"/>
+                  <CheckBox id="chk_agree" taborder="1" text="동의" left="10" top="50" width="100" height="28" truevalue="Y" falsevalue="N"/>
+                  <Radio id="rdo_gender" taborder="2" left="10" top="90" width="200" height="28" innerdataset="ds_gender" codecolumn="CD" datacolumn="NM"/>
+                  <TextArea id="txt_memo" taborder="3" left="10" top="130" width="400" height="100"/>
+                </Layout>
+              </Layouts>
+            </Tabpage>
+            <Tabpage id="tpg_etc" text="기타">
+              <Layouts>
+                <Layout>
+                  <WebBrowser id="web_help" taborder="0" left="0" top="0" width="100%" height="100%"/>
+                  <Spin id="spn_cnt" taborder="1" left="10" top="10" width="100" height="28"/>
+                </Layout>
+              </Layouts>
+            </Tabpage>
+          </Tabpages>
+        </Tab>
+      </Layout>
+    </Layouts>
+    <Objects>
+      <Dataset id="ds_gender">
+        <ColumnInfo><Column id="CD" type="STRING" size="1"/><Column id="NM" type="STRING" size="10"/></ColumnInfo>
+        <Rows><Row><Col id="CD">M</Col><Col id="NM">남</Col></Row><Row><Col id="CD">F</Col><Col id="NM">여</Col></Row></Rows>
+      </Dataset>
+    </Objects>
+  </Form>
+</FDL>

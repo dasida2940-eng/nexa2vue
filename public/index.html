@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>nexa2vue</title>
+  <link rel="stylesheet" href="/app.css">
+</head>
+<body>
+  <header>
+    <h1>nexa2vue <small>넥사크로 → Vue 3 + Element Plus</small></h1>
+    <p class="note">로컬 전용 규칙 기반 변환기 — 소스는 이 PC 밖으로 전송되지 않습니다.</p>
+  </header>
+
+  <main>
+    <section class="card" id="setup">
+      <h2>0. 준비 — Claude 연결 → 구조 파악 (순서대로 해야 아래를 쓸 수 있습니다)</h2>
+      <h3>① Claude 연결 (AI 변환에 사용 · 가장 먼저)</h3>
+      <div class="ai-connect">
+        <span id="ai-status" class="hint"></span>
+        <button type="button" id="btn-ai-check">연결 확인</button>
+      </div>
+      <div class="ai-connect" id="ai-account-row" hidden>
+        <label class="inline">사용할 계정 (이 PC에 로그인된 Claude 계정이 여러 개입니다)
+          <select id="ai-account"></select>
+        </label>
+      </div>
+      <div class="ai-connect">
+        <label class="inline">연결 방식
+          <select id="ai-method">
+            <option value="claudeai">Claude 구독 계정 (claude.ai)</option>
+            <option value="console">Anthropic Console (API 사용량 과금)</option>
+          </select>
+        </label>
+        <button type="button" id="btn-ai-login">Claude 계정 연결 (웹 로그인)</button>
+        <button type="button" id="btn-ai-switch" hidden>계정 변경 (로그아웃 후 다시 연결)</button>
+      </div>
+      <p id="ai-login-hint" class="hint" hidden></p>
+      <div id="ai-usage" class="usage" hidden></div>
+
+      <fieldset id="structure-box" class="step-lock" disabled>
+      <h3>② 구조 파악</h3>
+      <p id="structure-lock" class="message error">Claude를 먼저 연결하세요. 연결되면 구조 파악을 할 수 있습니다.</p>
+      <label for="uni-frontend">frontend 경로 (화면 규칙·공통 컴포넌트를 참조만 함)</label>
+      <div class="row path-row">
+        <input id="uni-frontend" type="text" spellcheck="false" placeholder="선택 버튼으로 폴더 선택 (또는 경로 직접 입력)">
+        <button type="button" id="btn-pick-frontend">선택</button>
+      </div>
+      <label for="uni-backend">backend 경로 (백엔드 규칙·기준 화면을 참조만 함 · 비우면 백엔드는 만들지 않음)</label>
+      <div class="row path-row">
+        <input id="uni-backend" type="text" spellcheck="false" placeholder="선택 버튼으로 폴더 선택 (또는 경로 직접 입력)">
+        <button type="button" id="btn-pick-backend">선택</button>
+        <button type="button" id="btn-clear-backend">비우기</button>
+      </div>
+      <div class="ai-connect">
+        <button type="button" id="btn-analyze" class="primary">구조 파악</button>
+        <span id="structure-status" class="hint"></span>
+      </div>
+      <ul id="structure-summary" class="hint"></ul>
+      <div id="skill-box" hidden>
+        <div class="ai-connect">
+          <strong>규칙 스킬</strong>
+          <span id="skill-status" class="hint"></span>
+          <button type="button" id="btn-skill-make">다시 만들기</button>
+          <button type="button" id="btn-skill-cancel" hidden>중지</button>
+        </div>
+        <p class="hint">구조 파악이 끝나면 Claude가 frontend에 있는 화면(src/views)을 읽고 요약 스킬을 만듭니다(문서는 보지 않음) · 화면 코드가 Anthropic으로 전송됨 · 몇 분. 만든 스킬은 아래 변환 규칙 스킬 폴더에 자동으로 들어갑니다.</p>
+        <textarea id="skill-log" class="log" readonly rows="6" spellcheck="false" aria-label="규칙 스킬 생성 로그" hidden></textarea>
+      </div>
+      </fieldset>
+    </section>
+
+    <fieldset id="workspace" class="workspace" disabled>
+    <p id="workspace-lock" class="message error">Claude 연결과 구조 파악을 먼저 하세요. 위의 ①, ②를 마치면 아래를 쓸 수 있습니다.</p>
+    <section class="card" id="settings">
+      <h2>1. 변환 설정</h2>
+      <label for="input-dir">입력 폴더 (넥사크로 화면 .xfdl이 들어 있는 폴더) · 필수</label>
+      <div class="row path-row">
+        <input id="input-dir" type="text" spellcheck="false" placeholder="선택 버튼으로 폴더 선택 (또는 경로 직접 입력)">
+        <button type="button" id="btn-pick-input" class="primary">선택</button>
+      </div>
+      <label for="output-dir">출력 폴더 (Vue 결과, 원하는 위치 · 입력 폴더와 겹치면 안 됨) · 필수</label>
+      <div class="row path-row">
+        <input id="output-dir" type="text" spellcheck="false" placeholder="선택 버튼으로 폴더 선택 (또는 경로 직접 입력)">
+        <button type="button" id="btn-pick-output">선택</button>
+      </div>
+      <p class="hint">위에서 파악한 uni 구조로 변환합니다. 화면마다 규칙 기반 초안을 만든 뒤 AI(이 PC의 Claude Code)가 스크립트까지 옮깁니다 · 화면 소스가 Anthropic으로 전송됨 · 화면당 몇 분. AI가 실패한 화면은 초안을 저장합니다.</p>
+      <label class="inline"><input id="viewer" type="checkbox" checked> 미리보기 함께 생성 (구조 파악한 frontend의 컴포넌트·스타일로 변환 화면을 띄워 확인, 설치 불필요)</label>
+      <label class="inline"><input id="shot-docs" type="checkbox"> 변환이 끝나면 화면 설명 문서 만들기 (미리보기로 화면을 캡처해 영역마다 번호를 붙이고, Claude가 번호별 설명·사용 순서를 써서 docs의 화면 문서에 넣음 · 화면당 1~3분 · 변환된 화면 코드와 캡처가 Anthropic으로 전송됨 · 위 미리보기 생성이 켜져 있어야 함)</label>
+      <label class="inline">동시에 변환할 화면 수 <input id="ai-parallel" type="number" min="1" max="8" value="3" style="width:64px"> (화면마다 따로 Claude Code 세션 · 많이 늘리면 사용량 한도에 빨리 닿음)</label>
+      <label class="inline">화면당 AI 제한 시간 <input id="ai-timeout" type="number" min="1" max="120" value="20" style="width:64px">분 (넘으면 그 화면은 규칙 기반 초안을 저장 · 큰 화면은 10분 넘게 걸림)</label>
+      <label class="inline"><input id="ai-fix" type="checkbox" checked> 검사에 걸리면 AI가 바로 한 번 더 고치기 (변환 결과가 프로젝트 컴포넌트를 잘못 쓴 곳 — 선언과 다른 props, 없는 export·파일 — 만 고침 · 걸린 화면만 Claude를 한 번 더 부름 · 그래도 남으면 그 화면은 "AI 실패"로 표시)</label>
+      <label for="ai-skill">변환 규칙 스킬 폴더 (기본: 사용자 폴더\.nexa2vue\skills — 구조 파악이 만든 스킬이 들어 있고, 직접 만든 스킬 폴더도 여기에 넣으면 함께 적용 · 다른 스킬 하나의 폴더나 .claude\skills 같은 폴더도 고를 수 있음 · 비우면 기본 규칙)</label>
+      <div class="row path-row">
+        <input id="ai-skill" type="text" spellcheck="false" placeholder="선택 버튼으로 폴더 선택 (또는 경로 직접 입력)">
+        <button type="button" id="btn-pick-skill">선택</button>
+        <button type="button" id="btn-ai-skills">스킬 목록</button>
+      </div>
+      <div id="ai-skill-list" class="skill-list" hidden></div>
+      <p id="ai-skill-message" class="message" role="status"></p>
+      <div class="row">
+        <button type="button" id="btn-preview" disabled>화면 검토</button>
+        <button type="button" id="btn-run" class="primary" disabled>변환 실행</button>
+        <button type="button" id="btn-retry" disabled title="출력 폴더의 지난 변환 결과에서 AI가 실패한(사용 한도·시간 초과 등) 화면만 다시 AI로 변환합니다. 나머지 화면은 건드리지 않습니다.">AI 실패한 화면만 다시 변환</button>
+        <button type="button" id="btn-cancel" disabled>취소</button>
+      </div>
+      <p class="hint">AI 실패한 화면만 다시 변환: 같은 입력·출력 폴더로 지난번에 변환했을 때, AI가 실패했거나(사용 한도·시간 초과, 프로젝트 컴포넌트를 잘못 써서 검사에 걸리고 바로 고치기로도 안 고쳐짐) 끝까지 못 간 화면만 다시 돌립니다. 검사에 걸린 화면은 무엇이 틀렸는지 AI에 알려 주고 다시 변환합니다. 화면 종류·출력 이름은 지난 변환 그대로 쓰므로 화면 검토는 필요 없습니다.</p>
+      <p id="folders-hint" class="hint">입력 폴더와 출력 폴더를 모두 채워야 화면 검토를 할 수 있습니다.</p>
+      <p id="name-hint" class="hint" hidden>화면 검토를 눌러 화면마다 종류(화면·하위 화면·팝업)·부모 화면·출력 이름을 확인하고, 아래 확인란에 체크해야 변환할 수 있습니다.</p>
+      <p id="message" class="message" role="status"></p>
+      <div id="preview"></div>
+    </section>
+    </fieldset>
+
+    <section class="card" id="progress-card" hidden>
+      <h2>2. 진행 상황</h2>
+      <div id="job-usage" class="usage" hidden></div>
+      <textarea id="log" class="log" readonly rows="16" spellcheck="false" aria-label="진행 로그"></textarea>
+      <progress id="progress" max="1" value="0"></progress>
+      <p id="summary"></p>
+      <div id="missing-gfn"></div>
+      <div id="viewer-guide" class="viewer-guide" hidden></div>
+      <table class="files">
+        <thead><tr><th>상태</th><th>파일</th><th>TODO</th></tr></thead>
+        <tbody id="file-rows"></tbody>
+      </table>
+    </section>
+
+    <section class="card" id="detail-card" hidden>
+      <h2>3. 결과 비교 <code id="detail-name"></code></h2>
+      <ul id="detail-todos" class="todos"></ul>
+      <div class="compare">
+        <div>
+          <h3>원본</h3>
+          <pre id="detail-source"></pre>
+        </div>
+        <div>
+          <h3>변환 결과 <select id="detail-output"></select></h3>
+          <pre id="detail-result"></pre>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script src="/name-table.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>

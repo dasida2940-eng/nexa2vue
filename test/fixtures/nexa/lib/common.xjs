@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Script version="1.0" type="xscript5.1"><![CDATA[
+this.gfn_isNull = function(val)
+{
+	return val == null || val == "";
+};
+
+this.gfn_trim = function(val)
+{
+	if (this.gfn_isNull(val)) return "";
+	return String(val).trim();
+};
+]]></Script>

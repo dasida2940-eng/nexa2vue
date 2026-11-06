@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 가상 샘플: 조회조건 2줄 + 왼쪽 마스터 그리드 + 오른쪽 디테일 그리드 -->
+<FDL version="2.1">
+  <Form id="BAU0101010" width="1280" height="720" titletext="학적변동 관리" onload="form_onload">
+    <Layouts>
+      <Layout height="720" width="1280">
+        <Div id="div_search" taborder="0" left="10" top="10" right="10" height="70">
+          <Layouts>
+            <Layout>
+              <Static id="sta_syy" text="* 학년도" left="10" top="5" width="70" height="25"/>
+              <Edit id="edt_syy" left="85" top="5" width="100" height="25" maxlength="4"/>
+              <Static id="sta_shtm" text="학기 :" left="200" top="5" width="60" height="25"/>
+              <Combo id="cbo_shtm" left="265" top="5" width="120" height="25" innerdataset="ds_shtm" codecolumn="CD" datacolumn="NM"/>
+              <Static id="sta_dept" text="학과" left="400" top="5" width="60" height="25"/>
+              <Combo id="cbo_dept" left="465" top="5" width="200" height="25" innerdataset="ds_dept" codecolumn="DEPT_CD" datacolumn="DEPT_NM"/>
+              <Static id="sta_from" text="변동일자" left="10" top="38" width="70" height="25"/>
+              <Calendar id="cal_from" left="85" top="38" width="120" height="25"/>
+              <Button id="btn_search" text="조회" right="10" top="38" width="80" height="25" onclick="fn_search"/>
+            </Layout>
+          </Layouts>
+        </Div>
+        <Static id="sta_master" text="학생 목록" left="10" top="95" width="200" height="25"/>
+        <Button id="btn_excel" text="엑셀" left="520" top="95" width="70" height="25" onclick="btn_excel_onclick"/>
+        <Grid id="grd_master" left="10" top="125" width="580" bottom="10" binddataset="ds_bamn010" oncellclick="grd_master_oncellclick">
+          <Formats>
+            <Format id="default">
+              <Columns><Column size="40"/><Column size="100"/><Column size="120"/><Column size="160"/></Columns>
+              <Rows><Row size="24" band="head"/><Row size="24"/></Rows>
+              <Band id="head">
+                <Cell text="No"/><Cell col="1" text="학번"/><Cell col="2" text="성명"/><Cell col="3" text="학과"/>
+              </Band>
+              <Band id="body">
+                <Cell expr="currow+1"/><Cell col="1" text="bind:STD_NO"/><Cell col="2" text="bind:STD_NM"/><Cell col="3" text="bind:DEPT_NM"/>
+              </Band>
+            </Format>
+          </Formats>
+        </Grid>
+        <Static id="sta_detail" text="학적변동 내역" left="600" top="95" width="200" height="25"/>
+        <Button id="btn_add" text="행추가" left="960" top="95" width="70" height="25" onclick="btn_add_onclick"/>
+        <Button id="btn_del" text="행삭제" left="1035" top="95" width="70" height="25" onclick="btn_del_onclick"/>
+        <Button id="btn_save" text="저장" left="1110" top="95" width="70" height="25" onclick="btn_save_onclick"/>
+        <Button id="btn_print" text="출력" left="1185" top="95" width="70" height="25" onclick="btn_print_onclick"/>
+        <Grid id="grd_detail" left="600" top="125" right="10" bottom="10" binddataset="ds_bamn011">
+          <Formats>
+            <Format id="default">
+              <Columns><Column size="40"/><Column size="100"/><Column size="120"/><Column size="100"/><Column size="200"/></Columns>
+              <Rows><Row size="24" band="head"/><Row size="24"/></Rows>
+              <Band id="head">
+                <Cell text="선택"/><Cell col="1" text="변동구분"/><Cell col="2" text="변동일자"/><Cell col="3" text="학점"/><Cell col="4" text="사유"/>
+              </Band>
+              <Band id="body">
+                <Cell text="bind:CHK" displaytype="checkboxcontrol" edittype="checkbox"/>
+                <Cell col="1" text="bind:CHG_SE_CD" displaytype="combocontrol" edittype="combo" combodataset="ds_chgse" combocodecol="CD" combodatacol="NM"/>
+                <Cell col="2" text="bind:CHG_DT" edittype="date"/>
+                <Cell col="3" text="bind:CRDT" edittype="normal"/>
+                <Cell col="4" text="bind:CHG_RSN" edittype="normal" editmaxlength="200"/>
+              </Band>
+            </Format>
+          </Formats>
+        </Grid>
+      </Layout>
+    </Layouts>
+    <Objects>
+      <Dataset id="ds_search">
+        <ColumnInfo><Column id="SYY" type="STRING" size="4"/><Column id="SHTM" type="STRING" size="1"/><Column id="DEPT_CD" type="STRING" size="10"/><Column id="CHG_DT_FROM" type="STRING" size="8"/></ColumnInfo>
+      </Dataset>
+      <Dataset id="ds_shtm">
+        <ColumnInfo><Column id="CD" type="STRING" size="1"/><Column id="NM" type="STRING" size="10"/></ColumnInfo>
+        <Rows><Row><Col id="CD">1</Col><Col id="NM">1학기</Col></Row><Row><Col id="CD">2</Col><Col id="NM">2학기</Col></Row></Rows>
+      </Dataset>
+      <Dataset id="ds_dept">
+        <ColumnInfo><Column id="DEPT_CD" type="STRING" size="10"/><Column id="DEPT_NM" type="STRING" size="100"/></ColumnInfo>
+      </Dataset>
+      <Dataset id="ds_chgse">
+        <ColumnInfo><Column id="CD" type="STRING" size="2"/><Column id="NM" type="STRING" size="20"/></ColumnInfo>
+        <Rows><Row><Col id="CD">01</Col><Col id="NM">휴학</Col></Row><Row><Col id="CD">02</Col><Col id="NM">복학</Col></Row></Rows>
+      </Dataset>
+      <Dataset id="ds_bamn010">
+        <ColumnInfo><Column id="STD_NO" type="STRING" size="10"/><Column id="STD_NM" type="STRING" size="50"/><Column id="DEPT_NM" type="STRING" size="100"/></ColumnInfo>
+      </Dataset>
+      <Dataset id="ds_bamn011">
+        <ColumnInfo><Column id="CHK" type="STRING" size="1"/><Column id="STD_NO" type="STRING" size="10"/><Column id="CHG_SE_CD" type="STRING" size="2"/><Column id="CHG_DT" type="STRING" size="8"/><Column id="CRDT" type="INT" size="3"/><Column id="CHG_RSN" type="STRING" size="200"/></ColumnInfo>
+      </Dataset>
+    </Objects>
+    <Bind>
+      <BindItem id="item0" compid="div_search.form.edt_syy" propid="value" datasetid="ds_search" columnid="SYY"/>
+      <BindItem id="item1" compid="div_search.form.cbo_shtm" propid="value" datasetid="ds_search" columnid="SHTM"/>
+      <BindItem id="item2" compid="div_search.form.cbo_dept" propid="value" datasetid="ds_search" columnid="DEPT_CD"/>
+      <BindItem id="item3" compid="div_search.form.cal_from" propid="value" datasetid="ds_search" columnid="CHG_DT_FROM"/>
+    </Bind>
+    <Script type="xscript5.1"><![CDATA[
+this.form_onload = function(obj, e) { this.gfn_setCommCode("ds_dept", "DEPT"); };
+this.fn_search = function() {
+	this.transaction("selectMaster", "svc::ua/usr/selectBamn010List.do", "input=ds_search", "ds_bamn010=output", "", "fn_callback");
+};
+]]></Script>
+  </Form>
+</FDL>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FDL version="2.1">
+  <Form id="Broken" width="400" height="300">
+    <Layouts><Layout><Button id="btn_x" text="X" left="0" top="0" width="50" height="20"/></Layout></Layouts>
+    <Script type="xscript5.1"><![CDATA[
+this.fn_bad = function( {
+]]></Script>
+  </Form>
+</FDL>

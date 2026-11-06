@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- No network: everything this page needs is inline. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; connect-src 'none'">
+  <title>nexa2vue</title>
+  <style>/*__CSS__*/</style>
+</head>
+<body>
+  <header>
+    <h1>nexa2vue <small>넥사크로 → Vue 3 · 서버 없이 브라우저에서 변환</small></h1>
+    <p class="note">이 HTML 파일 하나로 동작합니다. 소스는 이 PC 밖으로 전송되지 않습니다(네트워크 요청 차단).</p>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>1. 입력 폴더 (넥사크로 소스)</h2>
+      <div class="row">
+        <button type="button" id="btn-pick-input" class="primary">폴더 선택</button>
+        <button type="button" id="btn-pick-input-alt">다른 방식으로 선택</button>
+        <code id="input-name">선택 안 함</code>
+      </div>
+      <input id="input-files" type="file" webkitdirectory multiple hidden>
+      <p id="support-note" class="hint" hidden></p>
+      <p id="input-message" class="message" role="status">넥사크로 화면(.xfdl)이 들어 있는 폴더를 고르세요. 하위 폴더까지 읽습니다. 원본은 읽기만 합니다.</p>
+      <div id="preview"></div>
+    </section>
+
+    <section class="card" id="settings" hidden>
+      <h2>2. 변환 설정</h2>
+      <label for="profile">출력 형식</label>
+      <select id="profile">
+        <option value="element">Element Plus — 원본 배치(절대좌표) 그대로</option>
+        <option value="uni">uni 프로젝트 표준 — SearchSection·Section·DataGrid·Form으로 다시 배치 (View·Service·Constant)</option>
+      </select>
+      <p id="profile-note" class="hint" hidden>uni 형식은 화면 배치만 옮기고 스크립트는 원본을 주석으로 남깁니다. 미리보기로 uni 스타일을 확인한 뒤 uni frontend의 src/views 아래로 복사해서 씁니다.</p>
+      <label class="inline"><input id="ui-only" type="checkbox" checked> UI만 변환 (화면 배치·컴포넌트·데이터셋·바인딩만, 스크립트는 원본을 주석으로 남김)</label>
+      <label class="inline"><input id="viewer" type="checkbox" checked> <span id="viewer-label">화면 보기용 Vite 프로젝트 함께 생성 (출력 폴더에서 바로 실행해 화면별로 확인)</span></label>
+      <p id="ai-note" class="hint" hidden>AI로 스크립트까지 변환하려면 서버 버전(node bin/nexa2vue-web.js)을 쓰세요. 이 PC의 Claude Code를 불러야 해서 HTML 파일만으로는 할 수 없습니다.</p>
+      <label id="uni-frontend-row" hidden>frontend 경로 (미리보기가 이 폴더의 공통 컴포넌트·스타일·패키지를 읽기만 함)<input id="uni-frontend" type="text" spellcheck="false" value="C:\uni_averedu\frontend"></label>
+      <div class="row">
+        <button type="button" id="btn-run" class="primary">변환 실행</button>
+        <button type="button" id="btn-cancel" disabled>취소</button>
+      </div>
+      <p id="message" class="message" role="status"></p>
+    </section>
+
+    <section class="card" id="progress-card" hidden>
+      <h2>3. 결과</h2>
+      <progress id="progress" max="1" value="0"></progress>
+      <p id="summary"></p>
+      <div id="missing-gfn"></div>
+      <div class="row">
+        <button type="button" id="btn-save-folder" class="primary" disabled>출력 폴더에 저장</button>
+        <button type="button" id="btn-save-zip" disabled>ZIP으로 내려받기</button>
+      </div>
+      <p id="save-message" class="message" role="status"></p>
+      <div id="viewer-guide" class="viewer-guide" hidden></div>
+      <table class="files">
+        <thead><tr><th>상태</th><th>파일</th><th>TODO</th></tr></thead>
+        <tbody id="file-rows"></tbody>
+      </table>
+    </section>
+
+    <section class="card" id="detail-card" hidden>
+      <h2>4. 결과 비교 <code id="detail-name"></code></h2>
+      <ul id="detail-todos" class="todos"></ul>
+      <div class="compare">
+        <div>
+          <h3>원본</h3>
+          <pre id="detail-source"></pre>
+        </div>
+        <div>
+          <h3>변환 결과 <select id="detail-output"></select></h3>
+          <pre id="detail-result"></pre>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script>/*__APP__*/</script>
+</body>
+</html>
